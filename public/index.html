@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Interview Coach</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: #0f172a; color: #e2e8f0; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    #app { width: 100%; max-width: 700px; height: 90vh; display: flex; flex-direction: column; gap: 12px; padding: 16px; }
+    h1 { font-size: 1.4rem; font-weight: 700; color: #f8fafc; }
+    #setup { display: flex; gap: 8px; }
+    #role-input { flex: 1; padding: 10px 14px; border-radius: 8px; border: 1px solid #334155; background: #1e293b; color: #f1f5f9; font-size: 0.95rem; }
+    #start-btn { padding: 10px 18px; background: #6366f1; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
+    #start-btn:hover { background: #4f46e5; }
+    #chat-box { flex: 1; overflow-y: auto; background: #1e293b; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+    .msg { max-width: 85%; padding: 10px 14px; border-radius: 10px; line-height: 1.5; font-size: 0.92rem; }
+    .msg.ai { background: #334155; align-self: flex-start; }
+    .msg.user { background: #6366f1; align-self: flex-end; }
+    #input-row { display: flex; gap: 8px; }
+    #user-input { flex: 1; padding: 10px 14px; border-radius: 8px; border: 1px solid #334155; background: #1e293b; color: #f1f5f9; font-size: 0.95rem; }
+    #send-btn { padding: 10px 18px; background: #6366f1; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
+    #send-btn:disabled { background: #475569; cursor: default; }
+    .typing { color: #94a3b8; font-style: italic; font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <h1>AI Interview Coach</h1>
+    <div id="setup">
+      <input id="role-input" placeholder="Enter a job role (e.g. Frontend Engineer, Product Manager)" />
+      <button id="start-btn">Start Interview</button>
+    </div>
+    <div id="chat-box"><p class="typing">Enter a role above to begin your interview.</p></div>
+    <div id="input-row">
+      <input id="user-input" placeholder="Your answer..." disabled />
+      <button id="send-btn" disabled>Send</button>
+    </div>
+  </div>
+
+  <script>
+    let sessionId = null;
+
+    const chatBox = document.getElementById('chat-box');
+    const userInput = document.getElementById('user-input');
+    const sendBtn = document.getElementById('send-btn');
+    const startBtn = document.getElementById('start-btn');
+    const roleInput = document.getElementById('role-input');
+
+    function addMsg(text, role) {
+      const div = document.createElement('div');
+      div.className = `msg ${role}`;
+      div.textContent = text;
+      chatBox.appendChild(div);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    startBtn.addEventListener('click', async () => {
+      const role = roleInput.value.trim();
+      if (!role) return;
+      sessionId = crypto.randomUUID();
+      chatBox.innerHTML = '<p class="typing">Starting your interview...</p>';
+      startBtn.disabled = true;
+
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId, role, message: '__START__' })
+      });
+      const data = await res.json();
+      chatBox.innerHTML = '';
+      addMsg(data.reply, 'ai');
+      userInput.disabled = false;
+      sendBtn.disabled = false;
+      userInput.focus();
+    });
+
+    async function sendMessage() {
+      const text = userInput.value.trim();
+      if (!text || !sessionId) return;
+      addMsg(text, 'user');
+      userInput.value = '';
+      sendBtn.disabled = true;
+
+      const typing = document.createElement('p');
+      typing.className = 'typing';
+      typing.textContent = 'Interviewer is thinking...';
+      chatBox.appendChild(typing);
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId, message: text })
+      });
+      const data = await res.json();
+      typing.remove();
+      addMsg(data.reply, 'ai');
+      sendBtn.disabled = false;
+      userInput.focus();
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+    userInput.addEventListener('keydown', e => { if (e.key === 'Enter') sendMessage(); });
+  </script>
+</body>
+</html>

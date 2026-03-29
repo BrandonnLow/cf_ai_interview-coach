@@ -332,7 +332,6 @@
     });
     const data = await res.json();
 
-    // Attach edit button now that we have the history index
     if (data.userMessageIndex !== undefined) {
       const editBtn = document.createElement('button');
       editBtn.className   = 'edit-btn';

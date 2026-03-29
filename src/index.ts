@@ -5,38 +5,69 @@ export interface Env {
   INTERVIEW_SESSION: DurableObjectNamespace;
 }
 
+type Message = { role: "user" | "assistant"; content: string };
+
 export class InterviewSession extends DurableObject {
-  private history: { role: "user" | "assistant"; content: string }[] = [];
-  private jobRole: string = "";
 
   async fetch(request: Request): Promise<Response> {
-    const { message, role } = await request.json() as { message: string; role?: string };
     const env = this.env as Env;
+    const body = await request.json() as {
+      message: string;
+      role?: string;
+      company?: string | null;
+      difficulty?: string;
+      editIndex?: number;
+    };
+    const { message, role, company, difficulty, editIndex } = body;
 
-    if (role) this.jobRole = role;
+    let history  = (await this.ctx.storage.get<Message[]>("history"))    ?? [];
+    let jobRole  = (await this.ctx.storage.get<string>("jobRole"))       ?? "";
+    let jobDiff  = (await this.ctx.storage.get<string>("difficulty"))    ?? "Mid";
+    let jobCo    = (await this.ctx.storage.get<string>("company"))       ?? "";
 
     const isStart = message === "__START__";
-    if (isStart) this.history = [];
 
-    const systemPrompt = `You are a professional interviewer conducting a job interview for the role of ${this.jobRole}.
-Your job is to:
-1. Ask one thoughtful interview question at a time.
-2. After each answer, give brief constructive feedback (1-2 sentences), then ask the next question.
-3. After 5 questions, summarize the candidate's performance and give an overall rating out of 10.
-Be encouraging but honest. Keep responses concise.`;
+    if (isStart) {
+      history = [];
+      if (role)       jobRole = role;
+      if (difficulty) jobDiff = difficulty;
+      if (company)    jobCo   = company;
+      else            jobCo   = "";
+    } else if (editIndex !== undefined) {
+      history = history.slice(0, editIndex);
+    }
+
+    const diffGuide: Record<string, string> = {
+      Junior: "Ask beginner-friendly questions focusing on fundamentals, basic concepts, and learning attitude.",
+      Mid:    "Ask intermediate questions covering practical experience, problem-solving, and solid fundamentals.",
+      Senior: "Ask advanced questions focusing on system design, leadership, trade-offs, and deep expertise.",
+    };
+
+    const companyContext = jobCo
+      ? `The candidate is interviewing at ${jobCo}. Tailor your questions to be relevant to the type of work and culture at ${jobCo} where appropriate.\n`
+      : "";
+
+    const systemPrompt =
+      `You are a professional interviewer conducting a ${jobDiff}-level job interview for the role of ${jobRole}.\n` +
+      companyContext +
+      `${diffGuide[jobDiff] ?? diffGuide["Mid"]}\n` +
+      `Your job is to:\n` +
+      `1. Ask one thoughtful interview question at a time.\n` +
+      `2. After each answer, give brief constructive feedback (1-2 sentences), then ask the next question.\n` +
+      `Be encouraging but honest. Keep responses concise.`;
 
     const userMessage = isStart
-      ? `Start the interview. Introduce yourself briefly and ask the first question.`
+      ? "Start the interview. Introduce yourself briefly and ask the first question."
       : message;
 
-    this.history.push({ role: "user", content: userMessage });
+    history.push({ role: "user", content: userMessage });
 
     let reply: string;
     try {
       const response = await env.AI.run("@cf/meta/llama-3.1-8b-instruct" as any, {
         messages: [
           { role: "system", content: systemPrompt },
-          ...this.history,
+          ...history,
         ],
         max_tokens: 512,
       } as any);
@@ -46,9 +77,20 @@ Be encouraging but honest. Keep responses concise.`;
       reply = "The AI service is temporarily unavailable. Please try again in a moment.";
     }
 
-    this.history.push({ role: "assistant", content: reply });
+    history.push({ role: "assistant", content: reply });
 
-    return Response.json({ reply });
+    const questionCount = history.filter(m => m.role === "assistant").length;
+
+    await this.ctx.storage.put("history",    history);
+    await this.ctx.storage.put("jobRole",    jobRole);
+    await this.ctx.storage.put("difficulty", jobDiff);
+    await this.ctx.storage.put("company",    jobCo);
+
+    return Response.json({
+      reply,
+      questionCount,
+      userMessageIndex: history.length - 2,
+    });
   }
 }
 
@@ -57,26 +99,33 @@ export default {
     const url = new URL(request.url);
 
     if (url.pathname === "/api/chat" && request.method === "POST") {
-      let body: { sessionId?: string; message?: string; role?: string };
+      let body: {
+        sessionId?: string;
+        message?: string;
+        role?: string;
+        company?: string | null;
+        difficulty?: string;
+        editIndex?: number;
+      };
       try {
         body = await request.json();
       } catch {
         return Response.json({ error: "Invalid JSON body" }, { status: 400 });
       }
 
-      const { sessionId, message, role } = body;
+      const { sessionId, message, role, company, difficulty, editIndex } = body;
 
       if (!sessionId || !message) {
         return Response.json({ error: "Missing sessionId or message" }, { status: 400 });
       }
 
-      const id = env.INTERVIEW_SESSION.idFromName(sessionId);
+      const id   = env.INTERVIEW_SESSION.idFromName(sessionId);
       const stub = env.INTERVIEW_SESSION.get(id);
 
       return stub.fetch(new Request("https://do/chat", {
-        method: "POST",
+        method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message, role }),
+        body:    JSON.stringify({ message, role, company, difficulty, editIndex }),
       }));
     }
 

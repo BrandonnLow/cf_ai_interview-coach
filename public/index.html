@@ -9,181 +9,348 @@
     body { font-family: system-ui, sans-serif; background: #0f172a; color: #e2e8f0; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; }
     #app { width: 100%; max-width: 700px; height: 90vh; display: flex; flex-direction: column; gap: 12px; padding: 16px; }
 
+    #header { display: flex; align-items: center; justify-content: space-between; }
     h1 { font-size: 1.4rem; font-weight: 700; color: #f8fafc; }
+    #restart-btn {
+      padding: 6px 14px; background: transparent; color: #94a3b8;
+      border: 1px solid #334155; border-radius: 8px; cursor: pointer; font-size: 0.82rem;
+      display: none;
+    }
+    #restart-btn:hover { border-color: #6366f1; color: #e2e8f0; }
 
     #setup { display: flex; flex-direction: column; gap: 10px; }
 
-    #role-row { display: flex; gap: 8px; }
-    #role-input { flex: 1; padding: 10px 14px; border-radius: 8px; border: 1px solid #334155; background: #1e293b; color: #f1f5f9; font-size: 0.95rem; }
-
-    #role-chips { display: flex; flex-wrap: wrap; gap: 8px; }
-    .chip {
-      padding: 6px 14px; border-radius: 999px; border: 1px solid #334155;
-      background: #1e293b; color: #94a3b8; font-size: 0.82rem; cursor: pointer;
-      transition: all 0.15s;
+    #setup-fields { display: flex; gap: 8px; }
+    #role-input, #company-input {
+      flex: 1; padding: 10px 14px; border-radius: 8px; border: 1px solid #334155;
+      background: #1e293b; color: #f1f5f9; font-size: 0.95rem;
     }
-    .chip:hover { border-color: #6366f1; color: #e2e8f0; }
-    .chip.active { background: #6366f1; border-color: #6366f1; color: #fff; }
-
-    #difficulty-row { display: flex; align-items: center; gap: 10px; }
-    #difficulty-row span { font-size: 0.85rem; color: #94a3b8; white-space: nowrap; }
-    #difficulty-btns { display: flex; gap: 6px; }
-    .diff-btn {
-      padding: 5px 14px; border-radius: 6px; border: 1px solid #334155;
-      background: #1e293b; color: #94a3b8; font-size: 0.82rem; cursor: pointer;
-      transition: all 0.15s;
-    }
-    .diff-btn:hover { border-color: #6366f1; color: #e2e8f0; }
-    .diff-btn.active { background: #6366f1; border-color: #6366f1; color: #fff; font-weight: 600; }
+    #role-input::placeholder, #company-input::placeholder { color: #64748b; }
 
     #start-btn { padding: 10px 18px; background: #6366f1; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; white-space: nowrap; }
     #start-btn:hover { background: #4f46e5; }
     #start-btn:disabled { background: #475569; cursor: default; }
 
+    #difficulty-row { display: flex; align-items: center; gap: 10px; }
+    #difficulty-row span { font-size: 0.85rem; color: #94a3b8; white-space: nowrap; }
+    #difficulty-btns { display: flex; gap: 6px; }
+    .diff-btn { padding: 5px 14px; border-radius: 6px; border: 1px solid #334155; background: #1e293b; color: #94a3b8; font-size: 0.82rem; cursor: pointer; transition: all 0.15s; }
+    .diff-btn:hover { border-color: #6366f1; color: #e2e8f0; }
+    .diff-btn.active { background: #6366f1; border-color: #6366f1; color: #fff; font-weight: 600; }
+
+    #progress-wrap { display: none; }
+    #progress-label { font-size: 0.82rem; color: #64748b; }
+
     #chat-box { flex: 1; overflow-y: auto; background: #1e293b; border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+
+    .msg-wrap { display: flex; flex-direction: column; }
+    .msg-wrap.user { align-items: flex-end; }
+    .msg-wrap.ai   { align-items: flex-start; }
     .msg { max-width: 85%; padding: 10px 14px; border-radius: 10px; line-height: 1.5; font-size: 0.92rem; white-space: pre-wrap; }
-    .msg.ai { background: #334155; align-self: flex-start; }
-    .msg.user { background: #6366f1; align-self: flex-end; }
+    .msg.ai   { background: #334155; }
+    .msg.user { background: #6366f1; }
+
+    .edit-btn { margin-top: 4px; font-size: 0.75rem; color: #64748b; background: none; border: none; cursor: pointer; padding: 2px 6px; border-radius: 4px; }
+    .edit-btn:hover { color: #94a3b8; background: #1e293b; }
+
+    .edit-area { width: 85%; margin-top: 4px; align-self: flex-end; }
+    .edit-textarea { width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid #6366f1; background: #1e293b; color: #f1f5f9; font-size: 0.92rem; resize: none; line-height: 1.5; }
+    .edit-actions { display: flex; gap: 6px; justify-content: flex-end; margin-top: 4px; }
+    .edit-save-btn   { padding: 4px 12px; background: #6366f1; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem; }
+    .edit-cancel-btn { padding: 4px 12px; background: transparent; color: #94a3b8; border: 1px solid #334155; border-radius: 6px; cursor: pointer; font-size: 0.8rem; }
+
+    .typing { color: #94a3b8; font-style: italic; font-size: 0.85rem; }
 
     #input-row { display: flex; gap: 8px; }
     #user-input { flex: 1; padding: 10px 14px; border-radius: 8px; border: 1px solid #334155; background: #1e293b; color: #f1f5f9; font-size: 0.95rem; }
     #send-btn { padding: 10px 18px; background: #6366f1; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; }
     #send-btn:disabled { background: #475569; cursor: default; }
-
-    .typing { color: #94a3b8; font-style: italic; font-size: 0.85rem; }
   </style>
 </head>
 <body>
-  <div id="app">
+<div id="app">
+
+  <div id="header">
     <h1>AI Interview Coach</h1>
+    <button id="restart-btn">↩ Restart</button>
+  </div>
 
-    <div id="setup">
-      <div id="role-row">
-        <input id="role-input" placeholder="Enter a job role or pick one below..." />
-        <button id="start-btn">Start Interview</button>
-      </div>
-
-      <div id="role-chips">
-        <span class="chip" data-role="Software Engineer">Software Engineer</span>
-        <span class="chip" data-role="Product Manager">Product Manager</span>
-        <span class="chip" data-role="Data Analyst">Data Analyst</span>
-        <span class="chip" data-role="UX Designer">UX Designer</span>
-        <span class="chip" data-role="DevOps Engineer">DevOps Engineer</span>
-        <span class="chip" data-role="Marketing Manager">Marketing Manager</span>
-      </div>
-
-      <div id="difficulty-row">
-        <span>Difficulty:</span>
-        <div id="difficulty-btns">
-          <button class="diff-btn" data-level="Junior">Junior</button>
-          <button class="diff-btn active" data-level="Mid">Mid</button>
-          <button class="diff-btn" data-level="Senior">Senior</button>
-        </div>
-      </div>
+  <div id="setup">
+    <div id="setup-fields">
+      <input id="role-input" list="role-list" placeholder="Job role..." autocomplete="off" />
+      <datalist id="role-list">
+        <option value="Software Engineer">
+        <option value="Product Manager">
+        <option value="Data Analyst">
+        <option value="UX Designer">
+        <option value="DevOps Engineer">
+        <option value="Marketing Manager">
+      </datalist>
+      <input id="company-input" placeholder="Company (optional)" />
+      <button id="start-btn">Start Interview</button>
     </div>
-
-    <div id="chat-box">
-      <p class="typing">Pick a role and difficulty above, then start your interview.</p>
-    </div>
-
-    <div id="input-row">
-      <input id="user-input" placeholder="Your answer..." disabled />
-      <button id="send-btn" disabled>Send</button>
+    <div id="difficulty-row">
+      <span>Difficulty:</span>
+      <div id="difficulty-btns">
+        <button class="diff-btn" data-level="Junior">Junior</button>
+        <button class="diff-btn active" data-level="Mid">Mid</button>
+        <button class="diff-btn" data-level="Senior">Senior</button>
+      </div>
     </div>
   </div>
 
-  <script>
-    let sessionId = null;
-    let selectedDifficulty = "Mid";
+  <div id="progress-wrap">
+    <span id="progress-label"></span>
+  </div>
 
-    const chatBox = document.getElementById('chat-box');
-    const userInput = document.getElementById('user-input');
-    const sendBtn = document.getElementById('send-btn');
-    const startBtn = document.getElementById('start-btn');
-    const roleInput = document.getElementById('role-input');
+  <div id="chat-box">
+    <p class="typing">Enter a job role and difficulty above, then start your interview.</p>
+  </div>
 
-    document.querySelectorAll('.chip').forEach(chip => {
-      chip.addEventListener('click', () => {
-        document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-        chip.classList.add('active');
-        roleInput.value = chip.dataset.role;
-      });
+  <div id="input-row">
+    <input id="user-input" placeholder="Your answer..." disabled />
+    <button id="send-btn" disabled>Send</button>
+  </div>
+
+</div>
+<script>
+  let sessionId = null;
+  let selectedDifficulty = "Mid";
+  let questionCount = 0;
+
+  const chatBox       = document.getElementById('chat-box');
+  const userInput     = document.getElementById('user-input');
+  const sendBtn       = document.getElementById('send-btn');
+  const startBtn      = document.getElementById('start-btn');
+  const restartBtn    = document.getElementById('restart-btn');
+  const roleInput     = document.getElementById('role-input');
+  const companyInput  = document.getElementById('company-input');
+  const progressWrap  = document.getElementById('progress-wrap');
+  const progressLabel = document.getElementById('progress-label');
+
+  document.querySelectorAll('.diff-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      selectedDifficulty = btn.dataset.level;
     });
+  });
 
-    document.querySelectorAll('.diff-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        selectedDifficulty = btn.dataset.level;
-      });
-    });
+  function updateProgress(q) {
+    progressWrap.style.display = 'block';
+    progressLabel.textContent  = `Question ${q}`;
+  }
 
-    function addMsg(text, role) {
-      const div = document.createElement('div');
-      div.className = `msg ${role}`;
-      div.textContent = text;
-      chatBox.appendChild(div);
-      chatBox.scrollTop = chatBox.scrollHeight;
-      return div;
+  function addMsg(text, role, historyIndex) {
+    const wrap = document.createElement('div');
+    wrap.className = `msg-wrap ${role}`;
+
+    const bubble = document.createElement('div');
+    bubble.className = `msg ${role}`;
+    bubble.textContent = text;
+    wrap.appendChild(bubble);
+
+    if (role === 'user' && historyIndex !== undefined) {
+      const editBtn = document.createElement('button');
+      editBtn.className = 'edit-btn';
+      editBtn.textContent = 'Edit';
+      editBtn.addEventListener('click', () => startEdit(wrap, bubble, editBtn, text, historyIndex));
+      wrap.appendChild(editBtn);
     }
 
-    startBtn.addEventListener('click', async () => {
-      const role = roleInput.value.trim();
-      if (!role) { roleInput.focus(); return; }
+    chatBox.appendChild(wrap);
+    chatBox.scrollTop = chatBox.scrollHeight;
+    return wrap;
+  }
 
-      sessionId = crypto.randomUUID();
-      chatBox.innerHTML = '<p class="typing">Starting your interview...</p>';
-      startBtn.disabled = true;
+  function startEdit(wrap, bubble, editBtn, originalText, historyIndex) {
+    bubble.style.display  = 'none';
+    editBtn.style.display = 'none';
 
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId,
-          role,
-          difficulty: selectedDifficulty,
-          message: '__START__',
-        }),
-      });
+    const areaWrap = document.createElement('div');
+    areaWrap.className = 'edit-area';
 
-      const data = await res.json();
-      chatBox.innerHTML = '';
-      addMsg(data.reply, 'ai');
-      userInput.disabled = false;
-      sendBtn.disabled = false;
-      startBtn.disabled = false;
-      userInput.focus();
+    const textarea = document.createElement('textarea');
+    textarea.className = 'edit-textarea';
+    textarea.value = originalText;
+    textarea.rows  = Math.max(2, originalText.split('\n').length);
+
+    const actions     = document.createElement('div');
+    actions.className = 'edit-actions';
+
+    const saveBtn   = document.createElement('button');
+    saveBtn.className   = 'edit-save-btn';
+    saveBtn.textContent = 'Save & Resend';
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className   = 'edit-cancel-btn';
+    cancelBtn.textContent = 'Cancel';
+
+    actions.appendChild(cancelBtn);
+    actions.appendChild(saveBtn);
+    areaWrap.appendChild(textarea);
+    areaWrap.appendChild(actions);
+    wrap.appendChild(areaWrap);
+    textarea.focus();
+
+    cancelBtn.addEventListener('click', () => {
+      areaWrap.remove();
+      bubble.style.display  = '';
+      editBtn.style.display = '';
     });
 
-    async function sendMessage() {
-      const text = userInput.value.trim();
-      if (!text || !sessionId) return;
+    saveBtn.addEventListener('click', async () => {
+      const newText = textarea.value.trim();
+      if (!newText) return;
 
-      addMsg(text, 'user');
-      userInput.value = '';
-      sendBtn.disabled = true;
+      let next = wrap.nextSibling;
+      while (next) {
+        const toRemove = next;
+        next = next.nextSibling;
+        toRemove.remove();
+      }
 
-      const typing = document.createElement('p');
-      typing.className = 'typing';
-      typing.textContent = 'Interviewer is thinking...';
-      chatBox.appendChild(typing);
-      chatBox.scrollTop = chatBox.scrollHeight;
+      areaWrap.remove();
+      bubble.textContent    = newText;
+      bubble.style.display  = '';
+      editBtn.style.display = '';
 
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId, message: text }),
-      });
+      const newEditBtn = editBtn.cloneNode(true);
+      editBtn.replaceWith(newEditBtn);
+      newEditBtn.addEventListener('click', () => startEdit(wrap, bubble, newEditBtn, newText, historyIndex));
 
-      const data = await res.json();
-      typing.remove();
-      addMsg(data.reply, 'ai');
-      sendBtn.disabled = false;
-      userInput.focus();
+      await submitMessage(newText, historyIndex);
+    });
+  }
+
+  async function submitMessage(text, editIndex) {
+    sendBtn.disabled = true;
+
+    const typing = document.createElement('p');
+    typing.className   = 'typing';
+    typing.textContent = 'Interviewer is thinking...';
+    chatBox.appendChild(typing);
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    const payload = { sessionId, message: text };
+    if (editIndex !== undefined) payload.editIndex = editIndex;
+
+    const res  = await fetch('/api/chat', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify(payload),
+    });
+    const data = await res.json();
+
+    typing.remove();
+    addMsg(data.reply, 'ai');
+    questionCount = data.questionCount ?? questionCount;
+    updateProgress(questionCount);
+    sendBtn.disabled = false;
+    userInput.focus();
+  }
+
+  async function startInterview() {
+    const role = roleInput.value.trim();
+    if (!role) { roleInput.focus(); return; }
+
+    sessionId     = crypto.randomUUID();
+    questionCount = 0;
+
+    chatBox.innerHTML          = '<p class="typing">Starting your interview...</p>';
+    progressWrap.style.display = 'none';
+    startBtn.disabled          = true;
+    restartBtn.style.display   = 'block';
+
+    const res  = await fetch('/api/chat', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({
+        sessionId,
+        role,
+        company:    companyInput.value.trim() || null,
+        difficulty: selectedDifficulty,
+        message:    '__START__',
+      }),
+    });
+    const data = await res.json();
+
+    chatBox.innerHTML = '';
+    addMsg(data.reply, 'ai');
+    questionCount = data.questionCount ?? 1;
+    updateProgress(questionCount);
+
+    userInput.disabled = false;
+    sendBtn.disabled   = false;
+    startBtn.disabled  = false;
+    userInput.focus();
+  }
+
+  startBtn.addEventListener('click', startInterview);
+
+  restartBtn.addEventListener('click', () => {
+    sessionId     = null;
+    questionCount = 0;
+
+    chatBox.innerHTML          = '<p class="typing">Enter a job role and difficulty above, then start your interview.</p>';
+    progressWrap.style.display = 'none';
+    userInput.disabled         = true;
+    sendBtn.disabled           = true;
+    restartBtn.style.display   = 'none';
+
+    roleInput.value    = '';
+    companyInput.value = '';
+    roleInput.focus();
+  });
+
+  async function sendMessage() {
+    const text = userInput.value.trim();
+    if (!text || !sessionId) return;
+
+    userInput.value = '';
+    sendBtn.disabled = true;
+
+    const wrap = document.createElement('div');
+    wrap.className = 'msg-wrap user';
+    const bubble = document.createElement('div');
+    bubble.className   = 'msg user';
+    bubble.textContent = text;
+    wrap.appendChild(bubble);
+    chatBox.appendChild(wrap);
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    const typing = document.createElement('p');
+    typing.className   = 'typing';
+    typing.textContent = 'Interviewer is thinking...';
+    chatBox.appendChild(typing);
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    const res  = await fetch('/api/chat', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ sessionId, message: text }),
+    });
+    const data = await res.json();
+
+    // Attach edit button now that we have the history index
+    if (data.userMessageIndex !== undefined) {
+      const editBtn = document.createElement('button');
+      editBtn.className   = 'edit-btn';
+      editBtn.textContent = 'Edit';
+      editBtn.addEventListener('click', () => startEdit(wrap, bubble, editBtn, text, data.userMessageIndex));
+      wrap.appendChild(editBtn);
     }
 
-    sendBtn.addEventListener('click', sendMessage);
-    userInput.addEventListener('keydown', e => { if (e.key === 'Enter') sendMessage(); });
-  </script>
+    typing.remove();
+    addMsg(data.reply, 'ai');
+    questionCount = data.questionCount ?? questionCount;
+    updateProgress(questionCount);
+    sendBtn.disabled = false;
+    userInput.focus();
+  }
+
+  sendBtn.addEventListener('click', sendMessage);
+  userInput.addEventListener('keydown', e => { if (e.key === 'Enter') sendMessage(); });
+</script>
 </body>
 </html>

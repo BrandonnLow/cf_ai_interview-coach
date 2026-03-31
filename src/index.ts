@@ -16,23 +16,26 @@ export class InterviewSession extends DurableObject {
       role?: string;
       company?: string | null;
       difficulty?: string;
+      interviewType?: string[];
       editIndex?: number;
     };
-    const { message, role, company, difficulty, editIndex } = body;
+    const { message, role, company, difficulty, interviewType, editIndex } = body;
 
-    let history  = (await this.ctx.storage.get<Message[]>("history"))    ?? [];
-    let jobRole  = (await this.ctx.storage.get<string>("jobRole"))       ?? "";
-    let jobDiff  = (await this.ctx.storage.get<string>("difficulty"))    ?? "Mid";
-    let jobCo    = (await this.ctx.storage.get<string>("company"))       ?? "";
+    let history      = (await this.ctx.storage.get<Message[]>("history"))      ?? [];
+    let jobRole      = (await this.ctx.storage.get<string>("jobRole"))         ?? "";
+    let jobDiff      = (await this.ctx.storage.get<string>("difficulty"))      ?? "Mid";
+    let jobCo        = (await this.ctx.storage.get<string>("company"))         ?? "";
+    let jobTypes     = (await this.ctx.storage.get<string[]>("interviewType")) ?? ["Technical", "Behavioural"];
 
     const isStart = message === "__START__";
 
     if (isStart) {
       history = [];
-      if (role)       jobRole = role;
-      if (difficulty) jobDiff = difficulty;
-      if (company)    jobCo   = company;
-      else            jobCo   = "";
+      if (role)          jobRole  = role;
+      if (difficulty)    jobDiff  = difficulty;
+      if (interviewType) jobTypes = interviewType;
+      if (company)       jobCo    = company;
+      else               jobCo    = "";
     } else if (editIndex !== undefined) {
       history = history.slice(0, editIndex);
     }
@@ -43,6 +46,14 @@ export class InterviewSession extends DurableObject {
       Senior: "Ask advanced questions focusing on system design, leadership, trade-offs, and deep expertise.",
     };
 
+    const typeGuide: Record<string, string> = {
+      Technical:   "technical questions that assess hard skills, coding ability, system design, or domain knowledge",
+      Behavioural: "behavioural questions using the STAR method (Situation, Task, Action, Result) that assess soft skills, teamwork, and past experiences",
+    };
+    const typeDesc = jobTypes.length === 2
+      ? `Alternate between ${typeGuide["Technical"]} and ${typeGuide["Behavioural"]}.`
+      : `Focus exclusively on ${typeGuide[jobTypes[0]]}.`;
+
     const companyContext = jobCo
       ? `The candidate is interviewing at ${jobCo}. Tailor your questions to be relevant to the type of work and culture at ${jobCo} where appropriate.\n`
       : "";
@@ -51,6 +62,7 @@ export class InterviewSession extends DurableObject {
       `You are a professional interviewer conducting a ${jobDiff}-level job interview for the role of ${jobRole}.\n` +
       companyContext +
       `${diffGuide[jobDiff] ?? diffGuide["Mid"]}\n` +
+      `Interview type: ${jobTypes.join(" & ")}. ${typeDesc}\n` +
       `Your job is to:\n` +
       `1. Ask one thoughtful interview question at a time.\n` +
       `2. After each answer, give brief constructive feedback (1-2 sentences), then ask the next question.\n` +
@@ -81,10 +93,11 @@ export class InterviewSession extends DurableObject {
 
     const questionCount = history.filter(m => m.role === "assistant").length;
 
-    await this.ctx.storage.put("history",    history);
-    await this.ctx.storage.put("jobRole",    jobRole);
-    await this.ctx.storage.put("difficulty", jobDiff);
-    await this.ctx.storage.put("company",    jobCo);
+    await this.ctx.storage.put("history",       history);
+    await this.ctx.storage.put("jobRole",       jobRole);
+    await this.ctx.storage.put("difficulty",    jobDiff);
+    await this.ctx.storage.put("company",       jobCo);
+    await this.ctx.storage.put("interviewType", jobTypes);
 
     return Response.json({
       reply,
@@ -105,6 +118,7 @@ export default {
         role?: string;
         company?: string | null;
         difficulty?: string;
+        interviewType?: string[];
         editIndex?: number;
       };
       try {
@@ -113,7 +127,7 @@ export default {
         return Response.json({ error: "Invalid JSON body" }, { status: 400 });
       }
 
-      const { sessionId, message, role, company, difficulty, editIndex } = body;
+      const { sessionId, message, role, company, difficulty, interviewType, editIndex } = body;
 
       if (!sessionId || !message) {
         return Response.json({ error: "Missing sessionId or message" }, { status: 400 });
@@ -125,7 +139,7 @@ export default {
       return stub.fetch(new Request("https://do/chat", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ message, role, company, difficulty, editIndex }),
+        body:    JSON.stringify({ message, role, company, difficulty, interviewType, editIndex }),
       }));
     }
 

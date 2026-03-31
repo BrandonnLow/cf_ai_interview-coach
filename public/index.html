@@ -31,12 +31,24 @@
     #start-btn:hover { background: #4f46e5; }
     #start-btn:disabled { background: #475569; cursor: default; }
 
-    #difficulty-row { display: flex; align-items: center; gap: 10px; }
-    #difficulty-row span { font-size: 0.85rem; color: #94a3b8; white-space: nowrap; }
-    #difficulty-btns { display: flex; gap: 6px; }
-    .diff-btn { padding: 5px 14px; border-radius: 6px; border: 1px solid #334155; background: #1e293b; color: #94a3b8; font-size: 0.82rem; cursor: pointer; transition: all 0.15s; }
-    .diff-btn:hover { border-color: #6366f1; color: #e2e8f0; }
-    .diff-btn.active { background: #6366f1; border-color: #6366f1; color: #fff; font-weight: 600; }
+    .option-row { display: flex; align-items: center; gap: 10px; }
+    .option-row span { font-size: 0.85rem; color: #94a3b8; white-space: nowrap; }
+
+    .chip-group { display: flex; gap: 6px; }
+    .chip {
+      padding: 5px 14px; border-radius: 6px; border: 1px solid #334155;
+      background: #1e293b; color: #94a3b8; font-size: 0.82rem; cursor: pointer;
+      transition: all 0.15s;
+    }
+    .chip:hover { border-color: #6366f1; color: #e2e8f0; }
+    .chip.active { background: #6366f1; border-color: #6366f1; color: #fff; font-weight: 600; }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-5px); }
+      40%, 80% { transform: translateX(5px); }
+    }
+    .shake { animation: shake 0.35s ease; }
 
     #progress-wrap { display: none; }
     #progress-label { font-size: 0.82rem; color: #64748b; }
@@ -89,12 +101,21 @@
       <input id="company-input" placeholder="Company (optional)" />
       <button id="start-btn">Start Interview</button>
     </div>
-    <div id="difficulty-row">
+
+    <div class="option-row">
       <span>Difficulty:</span>
-      <div id="difficulty-btns">
-        <button class="diff-btn" data-level="Junior">Junior</button>
-        <button class="diff-btn active" data-level="Mid">Mid</button>
-        <button class="diff-btn" data-level="Senior">Senior</button>
+      <div id="difficulty-btns" class="chip-group">
+        <button class="chip" data-level="Junior">Junior</button>
+        <button class="chip active" data-level="Mid">Mid</button>
+        <button class="chip" data-level="Senior">Senior</button>
+      </div>
+    </div>
+
+    <div class="option-row">
+      <span>Type:</span>
+      <div id="type-btns" class="chip-group">
+        <button class="chip active" data-type="Technical">Technical</button>
+        <button class="chip active" data-type="Behavioural">Behavioural</button>
       </div>
     </div>
   </div>
@@ -116,6 +137,7 @@
 <script>
   let sessionId = null;
   let selectedDifficulty = "Mid";
+  let selectedTypes = new Set(["Technical", "Behavioural"]);
   let questionCount = 0;
 
   const chatBox       = document.getElementById('chat-box');
@@ -127,12 +149,32 @@
   const companyInput  = document.getElementById('company-input');
   const progressWrap  = document.getElementById('progress-wrap');
   const progressLabel = document.getElementById('progress-label');
+  const typeBtnsEl    = document.getElementById('type-btns');
 
-  document.querySelectorAll('.diff-btn').forEach(btn => {
+  document.querySelectorAll('#difficulty-btns .chip').forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('#difficulty-btns .chip').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       selectedDifficulty = btn.dataset.level;
+    });
+  });
+
+  document.querySelectorAll('#type-btns .chip').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const t = btn.dataset.type;
+      if (selectedTypes.has(t)) {
+        if (selectedTypes.size === 1) {
+          typeBtnsEl.classList.remove('shake');
+          void typeBtnsEl.offsetWidth;
+          typeBtnsEl.classList.add('shake');
+          return;
+        }
+        selectedTypes.delete(t);
+        btn.classList.remove('active');
+      } else {
+        selectedTypes.add(t);
+        btn.classList.add('active');
+      }
     });
   });
 
@@ -268,9 +310,10 @@
       body:    JSON.stringify({
         sessionId,
         role,
-        company:    companyInput.value.trim() || null,
-        difficulty: selectedDifficulty,
-        message:    '__START__',
+        company:       companyInput.value.trim() || null,
+        difficulty:    selectedDifficulty,
+        interviewType: [...selectedTypes],
+        message:       '__START__',
       }),
     });
     const data = await res.json();
